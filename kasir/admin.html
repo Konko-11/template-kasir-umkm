@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Rain POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout.css"> 
+    
+    <style>
+        h1 { 
+            color: #333; 
+            border-bottom: 2px solid #0077c9; /* Biru Rain POS */
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+            margin-top: 0; 
+            font-weight: 600;
+        }
+        h2 { 
+            margin-top: 30px; 
+            color: #0077c9; /* Biru Rain POS */
+            font-weight: 600;
+        }
+        
+        .form-container { 
+            background: #fff; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); 
+            margin-bottom: 30px; 
+        }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="number"] { 
+            width: calc(100% - 22px); 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        
+        /* Buttons */
+        .add-button { background-color: #42b883; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.2s; }
+        .add-button:hover { background-color: #339c6e; }
+        .edit-button { background-color: #ffc107; color: #333; border-radius: 8px; }
+        .delete-button { background-color: #dc3545; color: white; border-radius: 8px; }
+        /* Tombol Hard Delete di dalam tabel (hanya icon) */
+        .delete-button-hard { 
+            background-color: #cc0000; 
+            color: white; 
+            padding: 8px 12px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.9em; 
+            margin-left: 5px;
+        }
+        .edit-button, .delete-button { padding: 8px 12px; border: none; cursor: pointer; margin-right: 5px; font-size: 0.9em; }
+
+        /* Table */
+        .product-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: #fff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05); 
+        }
+        .product-table th, .product-table td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        .product-table th { background-color: #0077c9; color: white; }
+
+        /* Status */
+        #status-message { padding: 10px; margin-top: 20px; border-radius: 8px; display: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Rain POS</h2>
+            <button class="hamburger-btn" onclick="toggleSidebar()">&#9776;</button>
+        </div>
+        <a href="dashboard.html">🏠<span>Dashboard Home</span></a>
+        <a href="kasir.html">🛒<span>Aplikasi Kasir</span></a>
+        <a href="admin.html" class="active">🛠️<span>Manajemen Produk</span></a>
+        <a href="history.html">🧾<span>Riwayat Transaksi</span></a> </div>
+
+    <div class="content-admin collapsed" id="content-admin">
+        <h1>Manajemen Produk</h1>
+        
+        <div id="status-message"></div>
+        
+        <div class="form-container">
+            <h2>Tambah Produk Baru</h2>
+            <label for="new-name">Nama Produk:</label>
+            <input type="text" id="new-name" placeholder="Contoh: Kopi Susu Panas" required>
+            
+            <label for="new-price">Harga (Rp):</label>
+            <input type="text" id="new-price" placeholder="Contoh: 15.000" onkeyup="formatInput(this)" required>
+
+            <label for="new-stock">Stok Awal:</label>
+            <input type="number" id="new-stock" placeholder="Contoh: 50" required value="0">
+            
+            <button class="add-button" onclick="addProduct()">Tambah Produk</button>
+        </div>
+            
+        <h2>Daftar Produk Saat Ini</h2>
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Produk</th>
+                    <th>Harga (Rp)</th>
+                    <th>Stok</th> 
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="product-list-body">
+            </tbody>
+        </table>
+    </div> 
+
+<script>
+    let products = [];
+    let nextId = 1;
+
+    // =========================================================
+    // FUNGSI UTILITIES & LAYOUT
+    // =========================================================
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content-admin');
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('collapsed');
+    }
+
+    function formatRupiah(number) {
+        if (typeof number !== 'number') return '0';
+        return number.toLocaleString('id-ID');
+    }
+    function unformatRupiah(value) {
+        const cleaned = value.toString().replace(/\./g, '');
+        return parseInt(cleaned) || 0;
+    }
+    function formatInput(inputElement) {
+        let value = inputElement.value.replace(/\./g, '');
+        if (value) {
+            value = parseInt(value);
+            inputElement.value = value.toLocaleString('id-ID');
+        }
+    }
+    function showStatusMessage(message, type) {
+        const msgElement = document.getElementById('status-message');
+        msgElement.textContent = message;
+        msgElement.style.display = 'block';
+        msgElement.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+        msgElement.style.color = type === 'success' ? '#155724' : '#721c24';
+        setTimeout(() => { msgElement.style.display = 'none'; }, 5000);
+    }
+
+
+    // =========================================================
+    // LOAD DATA & RENDER
+    // =========================================================
+
+    async function loadProducts() {
+        try {
+            const response = await fetch('admin_get_products.php'); 
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                products = result.data;
+                renderProducts();
+            } else {
+                showStatusMessage("Gagal memuat produk: " + result.message, "error");
+            }
+        } catch (e) {
+            showStatusMessage("Gagal terhubung ke server/database. Cek koneksi XAMPP Anda.", "error");
+        }
+    }
+
+    function renderProducts() {
+        const tbody = document.getElementById('product-list-body');
+        tbody.innerHTML = ''; 
+        
+        products.forEach(product => {
+            const productId = parseInt(product.id);
+            const row = tbody.insertRow();
+            row.id = `row-${productId}`;
+            
+            row.insertCell().textContent = productId;
+            row.insertCell().innerHTML = `<span id="name-${productId}">${product.name}</span>`;
+            row.insertCell().innerHTML = `<span id="price-${productId}">Rp ${formatRupiah(product.price)}</span>`;
+            
+            row.insertCell().innerHTML = `<span id="stock-${productId}">${product.stock}</span>`;
+            
+            const statusText = product.is_active ? 'Aktif' : 'Non-Aktif';
+            row.insertCell().innerHTML = `<span id="status-${productId}" style="color: ${product.is_active ? '#42b883' : '#dc3545'}; font-weight: 600;">${statusText}</span>`;
+
+            const actionCell = row.insertCell();
+            let actionButtons = '';
+            
+            if (!product.is_active && product.stock <= 0) {
+                // FUNGSI BARU: Jika Non-Aktif dan Stok habis, tampilkan input dan tombol tambah stok
+                actionButtons = `
+                    <input type="number" id="add-qty-${productId}" value="10" min="1" style="width: 50px; padding: 5px; border-radius: 4px; margin-right: 5px;">
+                    <button class="add-button" onclick="promptAddStock(${productId})" title="Tambah Stok & Aktifkan">Stok</button>
+                    <button class="delete-button-hard" onclick="hardDelete(${productId})" title="Hapus Permanen">
+                        🗑️
+                    </button>
+                `;
+            } else {
+                // Jika Aktif (atau Non-Aktif tapi stok masih ada), tampilkan tombol normal
+                let toggleButtonText = product.is_active ? 'Non-Aktifkan' : 'Aktifkan';
+                let toggleButtonClass = product.is_active ? 'delete-button' : 'add-button';
+
+                actionButtons = `
+                    <button class="edit-button" onclick="editProduct(${productId})">Edit</button>
+                    <button class="${toggleButtonClass}" onclick="toggleStatus(${productId})">
+                        ${toggleButtonText}
+                    </button>
+                `;
+                // Tombol Hard Delete hanya muncul jika NON-AKTIF
+                if (!product.is_active) {
+                    actionButtons += `
+                        <button class="delete-button-hard" onclick="hardDelete(${productId})" title="Hapus Permanen">
+                            🗑️
+                        </button>
+                    `;
+                }
+            }
+            actionCell.innerHTML = actionButtons;
+        });
+    }
+
+    // =========================================================
+    // FUNGSI CRUD DASAR
+    // =========================================================
+
+    async function addProduct() { /* ... (Logika Tambah Produk Tetap Sama) ... */
+        const nameInput = document.getElementById('new-name');
+        const priceInput = document.getElementById('new-price');
+        const stockInput = document.getElementById('new-stock'); 
+
+        const name = nameInput.value.trim();
+        const price = unformatRupiah(priceInput.value);
+        const stock = parseInt(stockInput.value) || 0; 
+
+        if (name && price > 0) {
+            try {
+                const response = await fetch('admin_save_product.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', name: name, price: price, stock: stock })
+                });
+                
+                if (!response.ok) {
+                    showStatusMessage(`Server Error: ${response.status}. Cek admin_save_product.php.`, "error");
+                    return;
+                }
+
+                const result = await response.json(); 
+                
+                if (result.status === 'success') {
+                    showStatusMessage("Produk berhasil ditambahkan ke database!", "success");
+                    nameInput.value = '';
+                    priceInput.value = '';
+                    stockInput.value = '0';
+                    await loadProducts(); 
+                } else {
+                    showStatusMessage("Gagal menambahkan produk: " + result.message, "error");
+                }
+            } catch (e) {
+                showStatusMessage(`Gagal memproses respons. Cek XAMPP/admin_save_product.php.`, "error");
+            }
+        } else {
+            showStatusMessage("Nama produk dan harga harus diisi dengan benar!", "error");
+        }
+    }
+
+
+    async function toggleStatus(id) { 
+        const product = products.find(p => p.id === id);
+        if (!product) {
+            showStatusMessage(`Produk dengan ID ${id} tidak ditemukan di daftar lokal.`, "error");
+            return;
+        }
+        
+        const newStatus = !product.is_active; 
+        const actionText = newStatus ? 'Mengaktifkan' : 'Menon-aktifkan';
+        
+        if (!confirm(`Yakin ingin ${actionText} produk: ${product.name}?`)) return;
+
+        try {
+            const response = await fetch('admin_delete_product.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: id, 
+                    is_active: newStatus
+                }) 
+            });
+            
+            if (!response.ok) {
+                showStatusMessage(`Server Error: ${response.status}. Cek admin_delete_product.php.`, "error");
+                return;
+            }
+            
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showStatusMessage(`Produk berhasil di${actionText.toLowerCase()}!`, "success");
+                loadProducts();
+            } else {
+                showStatusMessage("Gagal mengubah status: " + result.message, "error");
+            }
+        } catch (e) {
+             showStatusMessage(`Gagal memproses respons. Pastikan XAMPP/admin_delete_product.php aktif.`, "error");
+        }
+    }
+    
+    // ... (Fungsi editProduct dan saveEdit/cancelEdit tetap sama) ...
+    function editProduct(id) {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+
+        const row = document.getElementById(`row-${id}`);
+        const nameCell = row.cells[1];
+        const priceCell = row.cells[2];
+        const stockCell = row.cells[3]; 
+        const actionCell = row.cells[5]; 
+
+        nameCell.innerHTML = `<input type="text" id="edit-name-${id}" value="${product.name}" style="width: 90%; padding: 5px; border-radius: 4px;">`;
+        priceCell.innerHTML = `<input type="text" id="edit-price-${id}" value="${formatRupiah(product.price)}" onkeyup="formatInput(this)" style="width: 90%; padding: 5px; border-radius: 4px;">`;
+        stockCell.innerHTML = `<input type="number" id="edit-stock-${id}" value="${product.stock}" style="width: 90%; padding: 5px; border-radius: 4px;">`;
+        
+        actionCell.innerHTML = `
+            <button class="add-button" onclick="saveEdit(${id})" style="margin-right: 5px;">Simpan</button>
+            <button class="delete-button" onclick="cancelEdit(${id})">Batal</button>
+        `;
+    }
+
+    async function saveEdit(id) {
+        const newName = document.getElementById(`edit-name-${id}`).value.trim();
+        const priceString = document.getElementById(`edit-price-${id}`).value;
+        const newStock = parseInt(document.getElementById(`edit-stock-${id}`).value); 
+
+        const newPrice = unformatRupiah(priceString); 
+
+        if (newName && newPrice >= 0 && newStock >= 0) {
+            
+            try {
+                const response = await fetch('admin_save_product.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'edit', 
+                        id: id,
+                        name: newName, 
+                        price: newPrice, 
+                        stock: newStock 
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showStatusMessage("Produk berhasil diubah dan disimpan ke database!", "success");
+                    await loadProducts(); 
+                } else {
+                    showStatusMessage("Gagal menyimpan perubahan: " + result.message, "error");
+                    renderProducts(); 
+                }
+            } catch (e) {
+                showStatusMessage(`Gagal memproses respons. Cek XAMPP/admin_save_product.php.`, "error");
+                renderProducts(); 
+            }
+        } else {
+            showStatusMessage("Perubahan dibatalkan karena data tidak valid.", "error");
+            renderProducts(); 
+        }
+    }
+
+    function cancelEdit(id) {
+        renderProducts();
+    }
+
+
+    // =========================================================
+    // FUNGSI BARU: TAMBAH STOK CEPAT
+    // =========================================================
+    
+    async function promptAddStock(id) {
+        const product = products.find(p => p.id === id);
+
+        // Ambil nilai dari input yang sudah ada di baris
+        const inputElement = document.getElementById(`add-qty-${id}`);
+        const addQty = parseInt(inputElement.value) || 0; 
+        
+        if (addQty <= 0) {
+            showStatusMessage('Jumlah stok harus lebih dari 0.', 'error');
+            return;
+        }
+        
+        if (confirm(`Yakin ingin menambah stok ${addQty} unit untuk produk: ${product.name} dan mengaktifkannya kembali?`)) {
+            await executeAddStock(id, addQty);
+        }
+    }
+
+    async function executeAddStock(id, addQty) {
+        try {
+            const response = await fetch('admin_add_stock.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, add_qty: addQty })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showStatusMessage(result.message, "success");
+                await loadProducts(); 
+            } else {
+                showStatusMessage("Gagal menambah stok: " + result.message, "error");
+            }
+        } catch (e) {
+            showStatusMessage(`Gagal koneksi ke server untuk menambah stok.`, "error");
+        }
+    }
+
+    // =========================================================
+    // FUNGSI BARU: HAPUS PERMANEN (SATU PRODUK NON-AKTIF)
+    // =========================================================
+
+    async function hardDelete(id) {
+        const product = products.find(p => p.id === id);
+
+        if (!confirm(`PERINGATAN! Anda akan menghapus PERMANEN produk: ${product.name} (ID: ${id}). Tindakan ini tidak bisa dibatalkan. Lanjutkan?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('admin_hard_delete.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, action: 'hard_delete_single' })
+            });
+            
+            if (!response.ok) {
+                showStatusMessage(`Server Error: ${response.status}. Cek admin_hard_delete.php.`, "error");
+                return;
+            }
+
+            const result = await response.json(); 
+            
+            if (result.status === 'success') {
+                showStatusMessage(`BERHASIL: Produk ${product.name} telah dihapus permanen.`, "success");
+                await loadProducts(); 
+            } else {
+                showStatusMessage("Gagal menghapus permanen: " + result.message, "error");
+            }
+        } catch (e) {
+            showStatusMessage(`Gagal terhubung ke admin_hard_delete.php. Cek koneksi XAMPP Anda.`, "error");
+        }
+    }
+
+
+    window.onload = loadProducts;
+</script>
+</body>
+</html>

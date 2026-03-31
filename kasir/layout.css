@@ -1,0 +1,139 @@
+/* ======================================= */
+/* GLOBAL LAYOUT STYLES (SHARED - RAIN POS) */
+/* ======================================= */
+
+/* BASE LAYOUT */
+body { 
+    /* Menggunakan font modern dari Google Fonts (Inter) */
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    display: flex; 
+    min-height: 100vh; 
+    background-color: #eef5ff; /* Latar Belakang Putih Kebiruan */
+}
+
+/* SIDE MENU STYLES - DEFAULT (Terbuka) */
+.sidebar {
+    width: 250px;
+    background-color: #1a4f78; /* Biru Navy Gelap */
+    color: white;
+    padding-top: 20px;
+    /* Memberikan bayangan yang lebih lembut dan profesional */
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1); 
+    position: fixed;
+    height: 100%;
+    transition: width 0.3s, background-color 0.3s;
+    overflow-x: hidden;
+    /* Z-INDEX TINGGI AGAR TIDAK TERTUTUP KONTEN LAIN */
+    z-index: 1000; 
+}
+
+/* HEADER & HAMBURGER BUTTON */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px 15px 20px; 
+    border-bottom: 1px solid #2a6493; /* Garis pemisah yang lebih halus */
+    min-height: 50px; 
+    position: relative; 
+    z-index: 1001; 
+}
+.sidebar-header h2 {
+    margin: 0;
+    color: #92e6a7; /* Hijau Mint Cerah sebagai aksen */
+    transition: opacity 0.3s;
+    white-space: nowrap; 
+    flex-shrink: 1;
+    font-weight: 700;
+}
+.hamburger-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 10px; 
+    line-height: 1;
+    order: 2; 
+    flex-shrink: 0; 
+    transition: padding 0.3s;
+    z-index: 1002; 
+    opacity: 0.9;
+}
+.hamburger-btn:hover {
+    opacity: 1;
+}
+
+/* MENU LINK STYLES */
+.sidebar a {
+    padding: 15px 20px;
+    text-decoration: none;
+    font-size: 1em;
+    color: #c7d2e0; /* Warna link yang lebih cerah */
+    display: block;
+    transition: padding 0.3s, background-color 0.3s, color 0.3s;
+    white-space: nowrap;
+    font-weight: 500;
+}
+.sidebar a:hover {
+    background-color: #2a6493; /* Warna hover yang lebih gelap */
+    color: white;
+}
+.sidebar a.active {
+    background-color: #0077c9; /* Biru Cerah sebagai indikator aktif */
+    color: white;
+    font-weight: 600;
+    border-left: 3px solid #92e6a7; /* Garis aksen hijau */
+}
+.sidebar a span {
+    display: inline;
+    margin-left: 10px;
+}
+
+/* CONTENT PANEL STYLES */
+.content-admin {
+    margin-left: 250px;
+    padding: 20px;
+    flex-grow: 1;
+    transition: margin-left 0.3s;
+    position: relative; 
+    z-index: 1; 
+}
+
+/* ======================================= */
+/* COLLAPSED STATE (MENU TERTUTUP) */
+/* ======================================= */
+.sidebar.collapsed {
+    width: 60px; 
+}
+.sidebar.collapsed .sidebar-header h2 {
+    opacity: 0;
+    width: 0;
+    padding-right: 0; 
+}
+/* KEPALA SIDEBAR COLLAPSED */
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 0; 
+    min-height: 50px; 
+}
+/* AREA KLIK BESAR PADA TOMBOL HAMBURGER */
+.sidebar.collapsed .hamburger-btn {
+    order: 1;
+    padding: 20px 10px; /* Area klik besar */
+    line-height: 1;
+}
+
+.sidebar.collapsed a {
+    text-align: center; 
+    padding: 15px 0; 
+}
+.sidebar.collapsed a span { 
+    display: none; 
+}
+
+.content-admin.collapsed {
+    margin-left: 60px; 
+}

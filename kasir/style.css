@@ -1,0 +1,189 @@
+/* BASE STYLES */
+/*body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    display: flex; 
+    margin: 0; 
+    background-color: #f0f2f5; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+h2 { 
+    border-bottom: 2px solid #ccc; 
+    padding-bottom: 10px; 
+    margin-bottom: 20px; 
+    color: #333; 
+}
+
+/* PRODUCT PANEL */
+#product-panel { 
+    width: 65%; 
+    padding: 20px; 
+    background-color: #fff; 
+    border-right: 1px solid #ddd; 
+    overflow-y: auto; 
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Default: 4 kolom untuk desktop */
+    gap: 15px;
+}
+.product-item {
+    /* Mengubah warna biru produk */
+    background-color: #0077c9; /* Biru Rain POS */
+    color: white;
+    padding: 15px 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.9em;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+.product-item:hover { 
+    background-color: #0056b3; 
+    transform: translateY(-3px); 
+}
+
+/* CART PANEL */
+#cart-panel { 
+    width: 35%; 
+    padding: 20px; 
+    background-color: #e9ecef; 
+    display: flex;
+    flex-direction: column;
+}
+#cart-list { 
+    list-style: none; 
+    padding: 0; 
+    flex-grow: 1; 
+    overflow-y: auto;
+}
+#cart-list li {
+    padding: 12px 0;
+    border-bottom: 1px dotted #aaa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1em;
+}
+
+/* TOTAL & BUTTONS */
+#total-section { 
+    margin-top: 15px; 
+    padding: 15px; 
+    border-top: 3px solid #333; 
+    font-size: 1.6em; 
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    background-color: #fff;
+    border-radius: 5px;
+}
+#grand-total { 
+    color: #d9534f; 
+} 
+
+.checkout-button { 
+    width: 100%; 
+    padding: 18px; 
+    background-color: #28a745; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 1.3em; 
+    margin-top: 20px; 
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.checkout-button:hover { 
+    background-color: #1e7e34; 
+}
+
+.remove-btn { 
+    background: #dc3545; 
+    color: white; 
+    border: none; 
+    padding: 3px 8px; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 10px;
+}
+
+/* ------------------------------------------- */
+/* MEDIA QUERIES UNTUK DESAIN RESPONSIVE */
+/* ------------------------------------------- */
+
+/* Untuk Tablet (Layar maksimum 992px) */
+@media screen and (max-width: 992px) {
+    /* Mengubah produk dari 4 menjadi 3 kolom agar lebih besar */
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    /* Sedikit melebarkan keranjang untuk layar tablet */
+    #product-panel { width: 60%; }
+    #cart-panel { width: 40%; }
+    
+    /* Ukuran font total disesuaikan */
+    #total-section { font-size: 1.4em; }
+}
+
+/* Untuk Handphone/Ponsel (Layar maksimum 600px) */
+@media screen and (max-width: 600px) {
+    /* MENGUBAH TATA LETAK UTAMA */
+    body { 
+        flex-direction: column; /* Panel produk dan keranjang ditumpuk */
+        overflow-y: auto; 
+    }
+    
+    #product-panel {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        /* Tambahkan padding di bawah produk agar tidak tertutup footer keranjang */
+        padding-bottom: 200px; 
+    }
+    
+    /* PRODUK */
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 kolom di ponsel */
+        gap: 10px;
+    }
+    
+    /* KERANJANG DIJADIKAN FOOTER STICKY */
+    #cart-panel {
+        width: 100%;
+        padding: 0; /* Hapus padding panel utama */
+        position: fixed; /* Membuat panel menempel */
+        bottom: 0; /* Menempel di bagian bawah */
+        background-color: #f0f2f5; 
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 10; /* Memastikan keranjang di atas konten lain */
+    }
+
+    /* KONTEN KERANJANG DIHILANGKAN, HANYA TOTAL YANG DITAMPILKAN */
+    #cart-panel h2, #cart-list {
+        display: none; /* Sembunyikan judul keranjang dan daftar item */
+    }
+
+    /* TOTAL & TOMBOL BAYAR */
+    #total-section { 
+        font-size: 1.4em; 
+        margin: 0;
+        padding: 15px 20px; /* Tambahkan padding agar tidak terlalu mepet */
+        border-radius: 0; /* Hapus radius */
+        border-top: none;
+    }
+    
+    .checkout-button {
+        padding: 18px 20px;
+        margin-top: 0;
+        border-radius: 0;
+    }
+    
+    /* Perluas area klik untuk item di keranjang */
+    #cart-list li {
+        padding: 15px 10px;
+    }
+}

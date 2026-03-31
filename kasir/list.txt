@@ -1,0 +1,6 @@
+buku besar kecil? data keungan yg jelas,mungkin kasih bagian kasnya aja? agar bisa di pantau
+memperbagus dashboard, 
+buat logo simpel
+login per akun punya data stok dan barang daganya sendiri
+log perubahan barang login dll
+

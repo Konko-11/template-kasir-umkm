@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Kasir - Rain POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout.css"> 
+    <link rel="stylesheet" href="style.css"> 
+    
+    <style>
+        /* Gaya Tambahan untuk Metode Pembayaran dan Modal */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 20; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 30px;
+            border: none;
+            width: 90%; 
+            max-width: 500px; 
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* CONTAINER METODE PEMBAYARAN */
+        #payment-options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 600;
+            background-color: #f9f9f9;
+        }
+        .payment-option:hover {
+            border-color: #007bff;
+        }
+        .payment-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+        }
+        
+        /* TOMBOL KONFIRMASI */
+        .confirm-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px 0;
+            background-color: #28a745; 
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .confirm-button:hover {
+            background-color: #1e7e34;
+        }
+
+        #amount-input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 1.1em;
+            text-align: right;
+        }
+        #change-display {
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            background-color: #e6f0ff;
+        }
+
+        /* PERBAIKAN TAMPILAN: MENGGUNAKAN FLEXBOX PADA WRAPPER KASIR */
+        .kasir-content-wrapper {
+            /* Mengganti tata letak menjadi Flexbox untuk menata panel */
+            display: flex; 
+            /* Memastikan wrapper mengisi sisa lebar */
+            flex-grow: 1; 
+            /* Mengambil seluruh tinggi sisa viewport */
+            height: 100vh; 
+            /* Padding 20px agar tidak mepet ke tepi */
+            padding: 20px; 
+            /* Transisi untuk margin-left */
+            transition: margin-left 0.3s; 
+            /* Background harus sama dengan body agar terlihat seamless */
+            background-color: #eef5ff; 
+            /* Mengatur overflow agar tidak ada scrollbar ganda */
+            overflow: hidden; 
+        }
+
+        /* Pastikan panel produk dan keranjang mengambil tinggi penuh dari wrapper */
+        #product-panel, #cart-panel {
+            height: 100%; 
+            /* Menghapus flex-grow lama jika ada */
+            flex-grow: initial; 
+            /* Mengubah cara overflow ditangani karena sudah diatur di style.css */
+            overflow-y: initial;
+            /* Tambahkan box-sizing agar padding tidak merusak tinggi 100% */
+            box-sizing: border-box; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Rain POS</h2>
+            <button class="hamburger-btn" onclick="toggleSidebar()">&#9776;</button>
+        </div>
+        <a href="dashboard.html">🏠<span>Dashboard Home</span></a>
+        <a href="kasir.html" class="active">🛒<span>Aplikasi Kasir</span></a>
+        <a href="admin.html">🛠️<span>Manajemen Produk</span></a>
+        <a href="history.html">🧾<span>Riwayat Transaksi</span></a>
+    </div>
+
+    <div class="kasir-content-wrapper">
+        <div id="product-panel">
+            <h2>Daftar Produk</h2>
+            <div class="grid-container" id="product-grid">
+                </div>
+        </div>
+
+        <div id="cart-panel">
+            <h2>Keranjang Belanja</h2>
+            <ul id="cart-list">
+                </ul>
+            
+            <div id="total-section">
+                <span>Total:</span>
+                <span id="grand-total">Rp 0</span>
+            </div>
+            
+            <button class="checkout-button" onclick="openPaymentModal()">Bayar Sekarang</button>
+        </div>
+    </div>
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+            <h3 style="text-align: center; margin-bottom: 5px;">Pembayaran</h3>
+            
+            <div id="modal-total" style="font-size: 1.6em; font-weight: 700; margin-bottom: 25px; text-align: center; color: #007bff;">
+                Total: Rp 0
+            </div>
+            
+            <div id="payment-options-container">
+                <div class="payment-option" id="opt-cash" onclick="selectPayment('CASH')">
+                    💸 Tunai (CASH)
+                </div>
+                <div class="payment-option" id="opt-transfer" onclick="selectPayment('TRANSFER')">
+                    🏦 Transfer Bank
+                </div>
+                <div class="payment-option" id="opt-qris" onclick="selectPayment('QRIS')">
+                    📱 QRIS/E-Wallet
+                </div>
+                <div class="payment-option" id="opt-debit" onclick="selectPayment('DEBIT_CARD')">
+                    💳 Kartu Debit/Kredit
+                </div>
+            </div>
+
+            <div id="cash-section">
+                <label for="amount-input" style="font-weight: 600;">Jumlah Uang Masuk (Rp):</label>
+                <input type="text" id="amount-input" placeholder="0" onkeyup="formatInput(this); calculateChange()">
+                
+                <div id="change-display">
+                    Uang Kembali (Kembalian): Rp 0
+                </div>
+            </div>
+
+            <button class="confirm-button" onclick="processPayment()">
+                KONFIRMASI PEMBAYARAN
+            </button>
+        </div>
+    </div>
+
+
+<script>
+    let products = [];
+    let cart = {}; 
+    let activeProducts = [];
+    let currentTotal = 0;
+    let paymentMethod = 'CASH'; 
+
+    // =========================================================
+    // UTILITIES
+    // =========================================================
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('collapsed');
+        
+        // LOGIKA JS UNTUK MENGATUR MARGIN KONTEN
+        const wrapper = document.querySelector('.kasir-content-wrapper');
+        if (sidebar.classList.contains('collapsed')) {
+            // Jika ciut: 60px sidebar + 20px padding = 80px
+            wrapper.style.marginLeft = '80px'; 
+        } else {
+            // Jika terbuka: 250px sidebar + 20px padding = 270px
+            wrapper.style.marginLeft = '270px'; 
+        }
+    }
+    
+    function formatRupiah(number) {
+        if (typeof number !== 'number' || isNaN(number)) return '0';
+        return number.toLocaleString('id-ID');
+    }
+    
+    function unformatRupiah(value) {
+        const cleaned = value.toString().replace(/[^0-9]/g, '');
+        return parseInt(cleaned) || 0;
+    }
+    
+    function formatInput(inputElement) {
+        let value = inputElement.value.replace(/[^0-9]/g, '');
+        if (value) {
+            value = parseInt(value);
+            inputElement.value = value.toLocaleString('id-ID');
+        }
+    }
+
+
+    // =========================================================
+    // LOAD DATA PRODUK (tetap sama)
+    // =========================================================
+
+    async function loadProducts() {
+        try {
+            const response = await fetch('get_products.php'); 
+            activeProducts = await response.json(); 
+            activeProducts = activeProducts.map(p => ({
+                ...p,
+                id: parseInt(p.id),
+                stock: parseInt(p.stock)
+            }));
+            renderProducts();
+            renderCart(); 
+        } catch (e) {
+            console.error("Gagal memuat produk:", e);
+            document.getElementById('product-grid').innerHTML = 'Gagal memuat produk. Cek XAMPP/get_products.php.';
+        }
+    }
+
+    function renderProducts() {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+        
+        activeProducts.forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'product-item';
+            
+            item.setAttribute('onclick', `addToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price})`);
+            
+            const stock = product.stock; 
+            
+            let stockStatus = '';
+            
+            if (stock <= 0) {
+                 stockStatus = `<span style="color: #dc3545;">(HABIS)</span>`;
+                 item.style.backgroundColor = '#999'; 
+                 item.onclick = null; 
+            } else if (stock <= 5) {
+                 stockStatus = `<span style="color: #ffcc00;">(Sisa: ${stock})</span>`;
+            } else {
+                 stockStatus = `(Stok: ${stock})`;
+            }
+
+            item.innerHTML = `
+                ${product.name}
+                <br>
+                <strong>Rp ${formatRupiah(product.price)}</strong>
+                <span style="font-size: 0.7em;">${stockStatus}</span>
+            `;
+            grid.appendChild(item);
+        });
+    }
+
+    // =========================================================
+    // LOGIKA KERANJANGAN (tetap sama)
+    // =========================================================
+
+    function getProductStock(id) {
+        const productIdNumber = parseInt(id); 
+        const product = activeProducts.find(p => p.id === productIdNumber);
+        
+        if (!product) {
+            console.warn(`Produk ID ${id} tidak ditemukan di daftar aktif.`);
+            return 0;
+        }
+        
+        return product.stock; 
+    }
+
+    function addToCart(id, name, price) {
+        const productId = parseInt(id);
+        const stock = getProductStock(productId);
+        
+        if (stock <= 0) { 
+             alert(`Produk ${name} sudah habis!`);
+             return;
+        }
+
+        if (!cart[productId]) {
+            cart[productId] = { id: productId, name, price, qty: 0 };
+        }
+        
+        if (cart[productId].qty < stock) {
+            cart[productId].qty++;
+        } else {
+            alert(`Stok ${name} hanya tersedia ${stock} unit!`);
+        }
+        
+        renderCart();
+        updateSummary();
+    }
+    
+    function removeFromCart(id) { if (cart[id]) { delete cart[id]; renderCart(); updateSummary(); } }
+    
+    function decrementCart(id) {
+        if (cart[id]) {
+            cart[id].qty--;
+            if (cart[id].qty <= 0) { delete cart[id]; }
+            renderCart();
+            updateSummary();
+        }
+    }
+
+
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = '';
+        
+        const cartKeys = Object.keys(cart).sort();
+
+        cartKeys.forEach(id => {
+            const item = cart[id];
+            
+            const currentStock = getProductStock(item.id);
+            let stockWarning = '';
+            if (item.qty > currentStock) {
+                stockWarning = `<span style="color:red; font-weight:bold;">(Stok tidak valid! Max: ${currentStock})</span>`;
+            }
+            
+            const li = document.createElement('li');
+            
+            li.innerHTML = `
+                <div>
+                    ${item.name} 
+                    <br>
+                    <span style="font-weight: normal; font-size: 0.9em;">
+                        ${item.qty}x @ Rp ${formatRupiah(item.price)}
+                    </span>
+                    ${stockWarning}
+                </div>
+                <div style="text-align: right;">
+                    <strong>Rp ${formatRupiah(item.qty * item.price)}</strong>
+                    <button class="remove-btn" onclick="decrementCart(${id})">-</button>
+                    <button class="remove-btn" onclick="removeFromCart(${id})">X</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function updateSummary() {
+        currentTotal = 0;
+        Object.keys(cart).forEach(id => {
+            currentTotal += cart[id].qty * cart[id].price;
+        });
+        document.getElementById('grand-total').textContent = `Rp ${formatRupiah(currentTotal)}`;
+    }
+
+    // =========================================================
+    // MODAL PEMBAYARAN & LOGIKA (tetap sama)
+    // =========================================================
+
+    function openPaymentModal() {
+        if (Object.keys(cart).length === 0) {
+            alert('Keranjang masih kosong!');
+            return;
+        }
+        document.getElementById('modal-total').textContent = `Total: Rp ${formatRupiah(currentTotal)}`;
+        document.getElementById('payment-modal').style.display = 'block';
+        selectPayment('CASH'); 
+    }
+
+    function closePaymentModal() {
+        document.getElementById('payment-modal').style.display = 'none';
+        document.getElementById('amount-input').value = '';
+        document.getElementById('change-display').textContent = 'Uang Kembali (Kembalian): Rp 0';
+    }
+
+    function selectPayment(method) {
+        document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+        document.getElementById('opt-' + method.toLowerCase().replace('_', '')).classList.add('selected');
+
+        paymentMethod = method;
+        const cashSection = document.getElementById('cash-section');
+        
+        if (method === 'CASH') {
+            cashSection.style.display = 'block';
+            document.getElementById('amount-input').value = '';
+            calculateChange();
+        } else {
+            cashSection.style.display = 'none';
+            document.getElementById('amount-input').value = formatRupiah(currentTotal); 
+            document.getElementById('change-display').textContent = 'Pembayaran Lunas';
+        }
+    }
+
+    function calculateChange() {
+        const paidAmount = unformatRupiah(document.getElementById('amount-input').value);
+        const change = paidAmount - currentTotal;
+        const changeDisplay = document.getElementById('change-display');
+        
+        if (change >= 0) {
+            changeDisplay.textContent = `Uang Kembali (Kembalian): Rp ${formatRupiah(change)}`;
+            changeDisplay.style.color = '#155724';
+            changeDisplay.style.borderColor = '#28a745'; 
+        } else {
+            changeDisplay.textContent = `Kurang: Rp ${formatRupiah(Math.abs(change))}`;
+            changeDisplay.style.color = '#721c24';
+            changeDisplay.style.borderColor = '#dc3545'; 
+        }
+    }
+
+
+    // =========================================================
+    // CHECKOUT BARU (tetap sama)
+    // =========================================================
+
+    async function processPayment() {
+        const inputElement = document.getElementById('amount-input');
+        let paidAmount = 0;
+        let changeAmount = 0;
+
+        if (paymentMethod === 'CASH') {
+            paidAmount = unformatRupiah(inputElement.value);
+            changeAmount = paidAmount - currentTotal;
+            if (paidAmount < currentTotal) {
+                alert('Pembayaran tunai kurang! Mohon masukkan jumlah yang mencukupi.');
+                return;
+            }
+        } else {
+            paidAmount = currentTotal;
+            changeAmount = 0;
+        }
+
+
+        const cartKeys = Object.keys(cart);
+        const cartToSend = [];
+        
+        for (const id of cartKeys) {
+            const item = cart[id];
+            cartToSend.push({ 
+                id: parseInt(id), 
+                name: item.name,
+                price: item.price, 
+                qty: item.qty 
+            });
+        }
+        
+        const totalText = `Rp ${formatRupiah(currentTotal)}`;
+        
+        try {
+            const response = await fetch('checkout.php', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    cart: cartToSend, 
+                    total_amount: currentTotal,
+                    paid_amount: paidAmount, 
+                    change_amount: changeAmount, 
+                    payment_method: paymentMethod 
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                closePaymentModal();
+                alert(`Transaksi berhasil (${paymentMethod})!\nTotal: ${totalText}\nKembalian: Rp ${formatRupiah(changeAmount < 0 ? 0 : changeAmount)}`);
+                cart = {}; 
+                renderCart();
+                updateSummary();
+                loadProducts(); 
+            } else {
+                alert(`Transaksi GAGAL: ${result.message}`);
+            }
+
+        } catch (e) {
+            alert("Gagal koneksi ke server untuk checkout. Cek XAMPP/checkout.php.");
+        }
+    }
+
+
+    window.onload = () => {
+        // Panggil fungsi toggleSidebar saat load untuk memastikan margin awal benar (80px)
+        const sidebar = document.getElementById('sidebar');
+        const wrapper = document.querySelector('.kasir-content-wrapper');
+        
+        // Atur margin awal berdasarkan status collapsed/terbuka (default: collapsed)
+        if (sidebar.classList.contains('collapsed')) {
+             wrapper.style.marginLeft = '80px';
+        } else {
+             wrapper.style.marginLeft = '270px';
+        }
+        
+        loadProducts();
+    };
+</script>
+</body>
+</html>

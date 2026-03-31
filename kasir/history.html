@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Transaksi - Rain POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout.css"> 
+    
+    <style>
+        h1 { 
+            color: #333; 
+            border-bottom: 2px solid #0077c9;
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+            margin-top: 0; 
+            font-weight: 600;
+        }
+        .transaction-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: #fff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05); 
+        }
+        .transaction-table th, .transaction-table td { 
+            border: 1px solid #eee; 
+            padding: 12px; 
+            text-align: left; 
+            vertical-align: top;
+        }
+        .transaction-table th { 
+            background-color: #0077c9; 
+            color: white; 
+            font-weight: 700;
+        }
+        .error-message {
+            padding: 15px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Rain POS</h2>
+            <button class="hamburger-btn" onclick="toggleSidebar()">&#9776;</button>
+        </div>
+        <a href="dashboard.html">🏠<span>Dashboard Home</span></a>
+        <a href="kasir.html">🛒<span>Aplikasi Kasir</span></a>
+        <a href="admin.html">🛠️<span>Manajemen Produk</span></a>
+        <a href="history.html" class="active">🧾<span>Riwayat Transaksi</span></a>
+    </div>
+
+    <div class="content-admin collapsed" id="content-history">
+        <h1>Riwayat Transaksi Penjualan</h1>
+        
+        <div id="status-area">
+            </div>
+
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th>Kode Transaksi</th>
+                    <th>Waktu</th>
+                    <th>Total Item</th>
+                    <th>Metode Bayar</th>
+                    <th>Uang Masuk</th>
+                    <th>Kembalian</th>
+                    <th>Total Akhir</th>
+                </tr>
+            </thead>
+            <tbody id="transaction-list-body">
+                <tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>
+            </tbody>
+        </table>
+    </div> 
+
+<script>
+    // FUNGSI UTAMA & UTILITIES
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content-history');
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('collapsed');
+    }
+
+    function formatRupiah(number) {
+        if (typeof number !== 'number' || isNaN(number)) return '0';
+        return number.toLocaleString('id-ID');
+    }
+
+    function displayError(message) {
+        document.getElementById('status-area').innerHTML = `<div class="error-message">❌ ${message}</div>`;
+        document.getElementById('transaction-list-body').innerHTML = `<tr><td colspan="7" style="text-align: center; color: #dc3545;">${message}</td></tr>`;
+    }
+
+    // ✅ FUNGSI PERBAIKAN: TRANSLASI METODE PEMBAYARAN (Lebih Robust)
+    function getPaymentMethodText(methodCode) {
+        // Konversi methodCode ke string, bersihkan spasi, dan pastikan uppercase
+        const code = String(methodCode).toUpperCase().trim(); 
+
+        const methods = {
+            'CASH': 'Tunai 💸',
+            'TRANSFER': 'Transfer Bank 🏦',
+            'QRIS': 'QRIS/E-Wallet 📱',
+            'DEBIT_CARD': 'Debit/Kredit 💳',
+            
+            // Penanganan Data Lama/Default:
+            '0': 'Tunai (Data Lama) 💰', // Jika nilai 0 (dari DB), asumsikan Tunai
+            'NULL': 'Error Data ❗', 
+            '': 'Error Data ❗' 
+        };
+        
+        return methods[code] || 'Tidak Diketahui/Error'; 
+    }
+
+
+    // FUNGSI UNTUK MEMUAT DATA TRANSAKSI
+    async function loadTransactions() {
+        const tbody = document.getElementById('transaction-list-body');
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>`;
+
+        try {
+            const response = await fetch('get_transactions.php'); 
+            
+            if (!response.ok) {
+                displayError(`Gagal terhubung ke server (HTTP Status: ${response.status}). Pastikan file get_transactions.php ada.`);
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                const transactions = result.data;
+                tbody.innerHTML = ''; 
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #6c757d;">Belum ada riwayat transaksi.</td></tr>`;
+                    return;
+                }
+
+                transactions.forEach(trx => {
+                    const row = tbody.insertRow();
+                    
+                    row.insertCell().textContent = trx.transaction_code;
+                    // Menggunakan transaction_date
+                    row.insertCell().textContent = new Date(trx.transaction_date).toLocaleString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); 
+                    row.insertCell().textContent = trx.total_items + ' item';
+                    
+                    // ✅ Menerjemahkan metode pembayaran
+                    row.insertCell().innerHTML = `<strong>${getPaymentMethodText(trx.payment_method)}</strong>`;
+                    
+                    row.insertCell().textContent = `Rp ${formatRupiah(trx.paid_amount)}`;
+                    row.insertCell().textContent = `Rp ${formatRupiah(trx.change_amount)}`;
+                    row.insertCell().innerHTML = `<strong style="color: #0077c9;">Rp ${formatRupiah(trx.total_amount)}</strong>`;
+                });
+
+            } else {
+                displayError("Gagal memuat riwayat. Pesan server: " + result.message);
+            }
+
+        } catch (e) {
+            displayError("Gagal memuat riwayat. Cek koneksi server Anda atau pastikan get_transactions.php aktif.");
+            console.error("Kesalahan jaringan:", e);
+        }
+    }
+
+    window.onload = loadTransactions;
+</script>
+</body>
+</html>

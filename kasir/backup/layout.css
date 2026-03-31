@@ -1,0 +1,134 @@
+/* ======================================= */
+/* GLOBAL LAYOUT STYLES (SHARED - RAIN POS) */
+/* ======================================= */
+
+/* BASE LAYOUT */
+body { 
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    /* ✅ KRITIS: BODY ADALAH FLEX CONTAINER UTAMA */
+    display: flex; 
+    min-height: 100vh; 
+    background-color: #eef5ff; 
+}
+
+/* SIDE MENU STYLES - DEFAULT (Terbuka) */
+.sidebar {
+    width: 250px;
+    background-color: #1a4f78; 
+    color: white;
+    padding-top: 20px;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1); 
+    /* ❌ KRITIS: HAPUS position: fixed */
+    height: 100vh; 
+    transition: width 0.3s, background-color 0.3s;
+    overflow-x: hidden;
+    flex-shrink: 0; /* Jangan biarkan Sidebar menyusut */
+    z-index: 1000; 
+}
+
+/* HEADER & HAMBURGER BUTTON */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+.sidebar-header h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin: 0;
+    color: #92e6a7; 
+    transition: opacity 0.3s, width 0.3s;
+}
+.hamburger-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+/* NAVIGATION LINKS */
+.sidebar a {
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #d1d8df; 
+    display: block;
+    transition: padding 0.3s, background-color 0.3s, color 0.3s;
+    white-space: nowrap;
+    font-weight: 500;
+}
+.sidebar a:hover {
+    background-color: #2a6493; 
+    color: white;
+}
+.sidebar a.active {
+    background-color: #0077c9; 
+    color: white;
+    font-weight: 600;
+    border-left: 3px solid #92e6a7; 
+}
+.sidebar a span {
+    display: inline;
+    margin-left: 10px;
+}
+
+/* CONTENT PANEL STYLES */
+/* Konten Admin dan Kasir (ambil sisa ruang setelah Sidebar) */
+.content-admin, .kasir-content-wrapper {
+    flex-grow: 1; 
+    padding: 20px;
+    position: relative; 
+    z-index: 1; 
+    margin-left: 0 !important; /* Hapus margin yang konflik */
+    overflow: hidden; 
+}
+
+
+/* ======================================= */
+/* COLLAPSED STATE (MENU TERTUTUP) */
+/* ======================================= */
+.sidebar.collapsed {
+    width: 60px; 
+}
+.sidebar.collapsed .sidebar-header h2 {
+    opacity: 0;
+    width: 0;
+}
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+.sidebar.collapsed .hamburger-btn {
+    position: static; 
+}
+.sidebar.collapsed a {
+    padding: 12px 0;
+    text-align: center;
+}
+.sidebar.collapsed a span {
+    display: none;
+}
+
+/* MEDIA QUERIES UNTUK LAYOUT UTAMA */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        /* Kembalikan FIXED dan tersembunyi di mobile */
+        position: fixed; 
+        width: 250px;
+        transform: translateX(-250px);
+    }
+    .sidebar.collapsed {
+        transform: translateX(-250px);
+    }
+    
+    .content-admin, .kasir-content-wrapper {
+        width: 100%;
+        padding: 10px;
+    }
+}

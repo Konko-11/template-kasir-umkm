@@ -1,0 +1,161 @@
+/* style.css */
+
+/* BASE STYLES */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    background-color: #f0f2f5; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+h2 { 
+    border-bottom: 2px solid #ccc; 
+    padding-bottom: 10px; 
+    margin-bottom: 20px; 
+    color: #333; 
+}
+
+/* ========================================= */
+/* KONTEN KASIR: LANDSCAPE (65% / 35%) */
+/* ========================================= */
+.kasir-content-wrapper {
+    display: flex; 
+    flex-grow: 1; 
+    height: 100vh;
+}
+
+/* PRODUCT PANEL (Kiri: Ambil Sisa Ruang, minimal 65%) */
+#product-panel { 
+    flex-grow: 1; 
+    flex-basis: 65%; /* Minimal 65% */
+    flex-shrink: 1; 
+    
+    padding: 20px; 
+    background-color: #fff; 
+    border-right: 1px solid #ddd; 
+    overflow-y: auto; 
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 15px;
+}
+.product-item {
+    background-color: #0077c9;
+    color: white;
+    padding: 15px 15px; 
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.9em;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+.product-item:hover { 
+    background-color: #0056b3; 
+    transform: translateY(-3px); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* CART PANEL (Kanan: Kunci di 35%) */
+#cart-panel { 
+    flex-basis: 35%; /* Kunci di 35% */
+    flex-shrink: 0; /* Jangan menyusut! */
+    flex-grow: 0; /* Jangan melar */
+    
+    padding: 20px; 
+    background-color: #f8f8f8; 
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Pastikan tidak fixed/absolute di desktop */
+    bottom: auto; 
+    box-shadow: none;
+    z-index: auto;
+}
+#cart-list { 
+    list-style: none; 
+    padding: 0; 
+    flex-grow: 1; 
+    overflow-y: auto;
+    margin: 0; 
+}
+#cart-list li {
+    padding: 10px 0; 
+    border-bottom: 1px dashed #ddd; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1em;
+    font-weight: 500;
+}
+#total-section { 
+    margin-top: 10px; 
+    padding: 15px 0; 
+    border-top: 2px solid #007bff; 
+    font-size: 1.4em; 
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+}
+#grand-total { 
+    color: #d9534f; 
+} 
+
+.checkout-button { 
+    width: 100%; 
+    padding: 15px; 
+    background-color: #007bff; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 1.1em; 
+    font-weight: 700;
+    margin-top: 15px; 
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.remove-btn { 
+    background: #dc3545; 
+    color: white; 
+    border: none; 
+    padding: 3px 8px; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 5px; 
+}
+
+
+/* MEDIA QUERIES (Untuk Tampilan Mobile Saja) */
+@media screen and (max-width: 600px) {
+    .kasir-content-wrapper { display: block; }
+    #product-panel {
+        width: 100%; 
+        padding-bottom: 200px; 
+        flex-basis: auto; 
+    }
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    #cart-panel {
+        width: 100%;
+        padding: 0; 
+        position: fixed; 
+        bottom: 0; 
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 10; 
+        display: block; 
+        flex-basis: auto; 
+    }
+    #cart-panel h2, #cart-list { display: none; }
+    #total-section { 
+        padding: 15px 20px; 
+        border-top: none;
+        background-color: #fff; 
+    }
+    .checkout-button {
+        margin-top: 0;
+        border-radius: 0;
+    }
+}
